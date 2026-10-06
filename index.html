@@ -150,6 +150,8 @@ const schoolList=c=>SCHOOLS[c]||[];
 const inList=(c,n)=>schoolList(c).some(x=>x[0]===n);
 const STAFF_TITLES=['領隊','總教練','教練','教練'];
 const TITLE='2027第15屆立德盃少棒錦標賽';
+/* 完成報名時自動上傳無核章欄 PDF 至主辦單位雲端硬碟：貼上 Google Apps Script 網頁應用程式網址（見 apps-script/Code.gs）；留空則不上傳 */
+const UPLOAD_URL='';
 const PLAYER_COUNT=20, PAGE_W=794, PAGE_H=1123;
 
 const blankPlayer=()=>({name:'',birth:'',h:'',w:'',photo:''});
@@ -471,30 +473,49 @@ async function capture(seal){
 }
 const fname=ext=>TITLE+'_'+(state.event.school||'學校')+ext;
 
+async function buildPdf(seal){
+  const {jsPDF}=window.jspdf;
+  const pdf=new jsPDF({unit:'mm',format:'a4',orientation:'portrait'});
+  const c=await capture(seal);
+  pdf.addImage(c.toDataURL('image/jpeg',0.92),'JPEG',0,0,210,297);
+  return pdf;
+}
+async function uploadPdf(){
+  const pdf=await buildPdf(false);
+  const e=state.event,c=state.contact;
+  const res=await fetch(UPLOAD_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},
+    body:JSON.stringify({county:e.county,school:e.school,contact:{name:c.name,phone:digits(c.phone),email:c.email},pdf:pdf.output('datauristring').split(',')[1]})});
+  const j=await res.json();
+  if(!j.ok)throw new Error(j.error||'上傳失敗');
+  return j.name;
+}
 async function makePdf(btnSel,seal){
   const btn=$(btnSel);btn.disabled=true;const old=btn.textContent;btn.textContent='產生中…';
   try{
-    const {jsPDF}=window.jspdf;
-    const pdf=new jsPDF({unit:'mm',format:'a4',orientation:'portrait'});
-    const c=await capture(seal);
-    pdf.addImage(c.toDataURL('image/jpeg',0.92),'JPEG',0,0,210,297);
+    const pdf=await buildPdf(seal);
     await saveFile(fname(seal?'_核章.pdf':'.pdf'),pdf.output('blob'));
   }catch(err){toast(err.message||'PDF 產生失敗');}
   finally{btn.disabled=false;btn.textContent=old;}
 }
-$('#btnSubmit').addEventListener('click',e=>{
+$('#btnSubmit').addEventListener('click',async e=>{
   const btn=e.currentTarget;
   const errs=contactErrors(state.contact);
   if(errs.length){tab='team';renderEditor();toast(errs[0]);return;}
-  if(!state.event.school){tab='team';renderEditor();toast('請先選擇縣市與學校');return;}
+  if(!state.event.county||!state.event.school){tab='team';renderEditor();toast('請先選擇縣市與學校');return;}
   const bad=state.players.filter(p=>issues(p).length).length;
   if(bad&&!confirmTwice(btn,`${bad} 位資料未完整，再按一次確認`))return;
+  if(UPLOAD_URL){
+    const old=btn.textContent;btn.disabled=true;btn.textContent='上傳中…';
+    try{await uploadPdf();}
+    catch(err){toast('報名表上傳失敗，請稍後再按一次：'+(err.message||err));return;}
+    finally{btn.disabled=false;btn.textContent=old;}
+  }
   const d=new Date(),z=n=>String(n).padStart(2,'0');
   state.locked=true;
   state.submittedAt=`${d.getFullYear()}/${z(d.getMonth()+1)}/${z(d.getDate())} ${z(d.getHours())}:${z(d.getMinutes())}`;
   unlocked=false;
   rerender();
-  toast('已完成報名，請下載 PDF 送交主辦單位。');
+  toast(UPLOAD_URL?'已完成報名，報名表已上傳至主辦單位。':'已完成報名，請下載 PDF 送交主辦單位。');
 });
 $('#btnPdf').addEventListener('click',()=>makePdf('#btnPdf',false));
 $('#btnSeal').addEventListener('click',()=>makePdf('#btnSeal',true));
