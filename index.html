@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>2027第15屆立德盃少棒錦標賽</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+:root{
+  --bg:#EEF1F4; --surface:#FFFFFF; --ink:#16233A; --muted:#5B6778; --line:#D5DBE3;
+  --navy:#1F3A5F; --accent:#B3362E; --desk:#D9DFE7; --warn:#8A5A00; --warn-bg:#FFF1D6;
+  --btn:#1F3A5F; --btn-ink:#fff; --ok:#1E6B4A;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0F1620; --surface:#17212E; --ink:#E8ECF2; --muted:#98A4B5; --line:#2A3646;
+    --navy:#8FB4E3; --accent:#E2665D; --desk:#0B1119; --warn:#F2C572; --warn-bg:#3A2F14;
+    --btn:#8FB4E3; --btn-ink:#0F1620; --ok:#6CCB9F;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0F1620; --surface:#17212E; --ink:#E8ECF2; --muted:#98A4B5; --line:#2A3646;
+  --navy:#8FB4E3; --accent:#E2665D; --desk:#0B1119; --warn:#F2C572; --warn-bg:#3A2F14;
+  --btn:#8FB4E3; --btn-ink:#0F1620; --ok:#6CCB9F;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:'Noto Sans TC','PingFang TC','Microsoft JhengHei',sans-serif;font-size:14px;line-height:1.55}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--navy);outline-offset:2px}
+
+.top{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;justify-content:space-between;padding:12px 20px;background:var(--surface);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+.top h1{margin:0;font-size:17px;font-weight:700;letter-spacing:.04em}
+.top h1 small{display:block;font-size:12px;font-weight:400;color:var(--muted);letter-spacing:0}
+.acts{display:flex;flex-wrap:wrap;gap:8px}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:6px;padding:6px 12px;cursor:pointer;white-space:nowrap}
+.btn:hover{border-color:var(--navy)}
+.btn.primary{background:var(--btn);color:var(--btn-ink);border-color:var(--btn);font-weight:500}
+.btn.sm{padding:3px 9px;font-size:12.5px}
+.btn.danger.armed{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+
+main{display:grid;grid-template-columns:minmax(340px,440px) 1fr;min-height:calc(100vh - 62px)}
+.editor{background:var(--surface);border-right:1px solid var(--line);padding:0 0 60px;min-width:0}
+.tabs{display:flex;border-bottom:1px solid var(--line);position:sticky;top:62px;background:var(--surface);z-index:3}
+.tab{flex:1;border:0;background:none;padding:12px 8px;cursor:pointer;color:var(--muted);border-bottom:3px solid transparent;font-weight:500}
+.tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+.panel{padding:16px 18px}
+.panel h2{font-size:14px;margin:18px 0 8px;font-weight:700}
+.panel h2:first-child{margin-top:0}
+.hint{color:var(--muted);font-size:12.5px;margin:4px 0 10px}
+.fld{display:block;margin:0 0 10px}
+.fld>span{display:block;font-size:12.5px;color:var(--muted);margin-bottom:3px}
+.fld input,.fld select{width:100%;padding:7px 9px;border:1px solid var(--line);border-radius:6px;background:var(--bg)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:0 10px}
+.photo-pick{display:flex;gap:10px;align-items:center;margin-bottom:10px}
+.thumb{width:50px;height:57px;border:1px solid var(--line);background:var(--bg);border-radius:4px;overflow:hidden;flex:none;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:11px}
+.thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.filebtn{position:relative;overflow:hidden;display:inline-block}
+.filebtn input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%}
+
+.pl{border:1px solid var(--line);border-radius:8px;margin-bottom:8px;background:var(--surface)}
+.pl.open{border-color:var(--navy)}
+.pl-head{display:flex;align-items:center;gap:10px;width:100%;padding:8px 10px;border:0;background:none;cursor:pointer;text-align:left}
+.pl-head .t{flex:1;min-width:0}
+.pl-head .t b{font-weight:700}
+.badge{display:inline-block;font-size:11.5px;padding:0 6px;border-radius:9px;background:var(--warn-bg);color:var(--warn);margin-right:4px}
+.badge.ok{background:transparent;color:var(--ok)}
+.pl-body{padding:10px 12px 12px;border-top:1px dashed var(--line)}
+.pl-tools{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.summary{margin-bottom:10px;font-size:13px}
+.staff-title{font-weight:700;margin-bottom:8px}
+
+.preview{background:var(--desk);padding:22px 20px 60px;min-width:0}
+.pv-note{max-width:794px;margin:0 auto 14px;color:var(--muted);font-size:12.5px}
+.pw{margin:0 auto 26px;width:fit-content;max-width:100%}
+.pw-box{position:relative;box-shadow:0 2px 14px rgba(0,0,0,.28);background:#fff;overflow:hidden}
+.pw figcaption{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:8px;color:var(--muted);font-size:12.5px}
+
+/* ===== printable sheet (always white paper) ===== */
+.sheet{--cw:136px;width:794px;height:1123px;background:#fff;color:#111;position:relative;padding:26px 30px 0;font-family:'Noto Sans TC','PingFang TC','Microsoft JhengHei',sans-serif;transform-origin:0 0;overflow:hidden}
+.s-head{display:flex;justify-content:center;padding-bottom:8px;border-bottom:3px solid #1F3A5F}
+.s-title{line-height:1.4;font-size:24px;font-weight:700;color:#1F3A5F;letter-spacing:.06em;text-align:center}
+.s-stitch{border-top:1.5px dashed #B3362E;margin-top:3px}
+.s-team{text-align:center;font-size:24px;line-height:1.4;font-weight:700;letter-spacing:.2em;margin:8px 0 8px;min-height:34px}
+.s-grid{display:grid;grid-template-columns:repeat(5,var(--cw));justify-content:center;gap:8px 12px}
+.s-grid.staff{display:flex;justify-content:center;gap:10px;margin-bottom:10px}
+.s-grid.staff .cell{flex:0 0 var(--cw)}
+.ph{aspect-ratio:10/11;background:#E6EAEE;border:1px solid #C9D0D8;overflow:hidden}
+.ph img,.ph svg{width:100%;height:100%;display:block;object-fit:cover}
+.nm{font-size:13px;line-height:1.4;font-weight:700;text-align:center;letter-spacing:.1em;margin:4px 0 3px;min-height:18px}
+.stf{font-size:12px;font-weight:700;text-align:center;margin-top:4px;line-height:1.3;min-height:22px}
+.info{font-size:9.5px;line-height:1.45;border-top:1px solid #7C8794}
+.info div{display:flex;justify-content:space-between;gap:4px;border-bottom:.5px solid #C9D0D8;padding:0 1px}
+.info b{font-weight:400;color:#4A5563;white-space:nowrap}
+.info span{font-weight:700;flex:1;text-align:center}
+input[data-sf="no"],input[data-f]{text-align:center}
+
+.s-seal{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid #333;margin:14px auto 0;width:calc(var(--cw)*5 + 48px)}
+.s-seal div{border-left:1px solid #333;height:var(--sh,110px);display:flex;flex-direction:column}
+.s-seal div:first-child{border-left:0}
+.s-seal b{display:block;text-align:center;font-size:13px;font-weight:700;padding:4px 0;border-bottom:1px solid #333;background:#EEF1F4;letter-spacing:.1em}
+.s-seal span{flex:1}
+
+@media (max-width:900px){
+  main{grid-template-columns:1fr}
+  .editor{border-right:0;border-bottom:1px solid var(--line)}
+  .tabs{top:0;position:static}
+}
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:9px 16px;border-radius:8px;font-size:13px;z-index:20;opacity:0;pointer-events:none;transition:opacity .2s}
+.toast.show{opacity:1}
+@media (prefers-reduced-motion:reduce){.toast{transition:none}}
+</style>
+</head>
+<body>
+<header class="top">
+  <h1>2027第15屆立德盃少棒錦標賽<small>填寫資料、上傳照片，右側即時預覽，完成後下載 PDF</small></h1>
+  <div class="acts">
+    <button class="btn" id="btnSeal">下載含核章欄 PDF</button>
+    <button class="btn primary" id="btnPdf">下載 PDF</button>
+  </div>
+</header>
+
+<main>
+  <aside class="editor" id="editor"></aside>
+  <section class="preview" id="preview" aria-label="名冊預覽"></section>
+</main>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+'use strict';
+const KEY='lide-roster-v2';
+const COUNTIES=['臺北市','新北市','桃園市','臺中市','臺南市','高雄市','基隆市','新竹市','嘉義市','新竹縣','苗栗縣','彰化縣','南投縣','雲林縣','嘉義縣','屏東縣','宜蘭縣','花蓮縣','臺東縣','澎湖縣','金門縣','連江縣'];
+/* 114學年度學生棒球聯賽國小軟式組、硬式組報名學校（依縣市分組；軟＝軟式組、硬＝硬式組） */
+const SCHOOLS={"臺北市":[["健康國小","軟"],["光復國小","軟"],["大理國小","軟"],["延平國小","軟"],["建安國小","軟硬"],["敦化國小","軟"],["東園國小","軟硬"],["桃源國小","軟"],["社子國小","軟硬"],["福林國小","軟硬"],["立農國小","軟硬"],["華興中學小學部","軟"],["長安國小","硬"],["龍山國小","硬"]],"新北市":[["三多國小","軟硬"],["中港國小","軟硬"],["二橋國小","軟硬"],["光華國小","軟硬"],["八里國小","軟硬"],["北港國小","軟"],["國泰國小","軟"],["土城國小","軟硬"],["大崁國小","軟硬"],["大豐國小","軟硬"],["德音國小","軟硬"],["忠義國小","軟硬"],["成功國小","軟硬"],["新和國小","軟"],["新埔國小","軟硬"],["新泰國小","軟"],["正義國小","軟硬"],["民安國小","軟硬"],["汐止國小","軟硬"],["興穀國小","軟硬"],["金龍國小","軟硬"],["麗園國小","軟硬"],["麗林國小","軟硬"]],"桃園市":[["中平國小","軟硬"],["仁善國小","軟硬"],["信義國小","軟硬"],["光明國小","軟硬"],["大勇國小","軟硬"],["大園國小","軟硬"],["新坡國小","軟硬"],["新屋國小","軟硬"],["普仁國小","軟"],["楊心國小","軟硬"],["水美國小","軟"],["永安國小","軟"],["石門國小","軟硬"],["芭里國小","軟"],["草漯國小","軟硬"],["華勛國小","軟硬"],["錦興國小","軟硬"],["青埔國小","軟硬"],["龍安國小","軟硬"],["龜山國小","軟硬"]],"臺中市":[["上楓國小","軟硬"],["力行國小","軟硬"],["北勢國小","軟硬"],["吉峰國小","軟"],["四德國小","軟硬"],["塗城國小","軟硬"],["大仁國小","軟硬"],["大元國小","軟硬"],["建國國小","軟"],["德芙蘭國小","軟硬"],["忠孝國小","軟硬"],["春安國小","軟硬"],["社口國小","軟"],["自由國小","軟硬"],["萬豐國小","軟硬"],["豐田國小","軟硬"],["軍功國小","軟硬"],["追分國小","軟硬"]],"臺南市":[["億載國小","軟硬"],["公園國小","軟硬"],["協進國小","軟硬"],["善化國小","軟硬"],["安慶國小","軟硬"],["崇學國小","軟硬"],["文元國小","軟硬"],["新進國小","軟硬"],["歸南國小","軟硬"],["永信國小","軟硬"],["白河國小","軟硬"],["省躬國小","軟硬"],["立人國小","軟硬"]],"高雄市":[["中正國小","軟硬"],["壽天國小","軟硬"],["屏山國小","軟硬"],["復興國小","軟硬"],["忠孝國小","軟硬"],["旗津國小","軟"],["桃源國小","軟"],["美濃國小","軟硬"],["金潭國小","軟硬"],["鼓山國小","軟硬"],["鼓岩國小","軟硬"],["龍華國小","軟"]],"基隆市":[["建德國小","軟硬"],["暖西國小","軟"],["東光國小","軟"],["武崙國小","軟"],["深澳國小","軟"],["深美國小","軟"]],"新竹市":[["三民國小","軟硬"],["北門國小","軟硬"],["建功國小","軟硬"],["東園國小","軟硬"],["東門國小","軟硬"],["民富國小","軟硬"],["科園國小","軟硬"],["科學園區實驗高中國小部","軟硬"],["舊社國小","軟硬"],["虎林國小","軟硬"],["西門國小","軟硬"],["關東國小","軟硬"],["頂埔國小","軟硬"],["香山國小","軟硬"]],"嘉義市":[["世賢國小","軟硬"],["博愛國小","軟硬"],["垂楊國小","軟硬"],["崇文國小","軟"],["民族國小","軟硬"],["興嘉國小","軟硬"]],"新竹縣":[["上舘國小","軟硬"],["中山國小","軟硬"],["五峰國小","硬"],["六家國小","軟硬"],["大同國小","軟硬"],["富興國小","軟"],["康乃薾國中小","軟"],["湖口國小","軟"],["華興國小","軟"],["關西國小","軟硬"]],"苗栗縣":[["仁愛國小","軟硬"],["僑成國小","軟"],["卓蘭國小","軟"],["后庄國小","軟硬"],["大同國小","軟"],["山佳國小","軟硬"],["成功國小","軟"],["新英國小","軟"],["汶水國小","硬"],["烏眉國小楓樹分校","硬"],["福基國小","軟"],["通霄國小","軟硬"],["銅鑼國小","硬"],["頂埔國小","軟"]],"彰化縣":[["南郭國小","軟硬"],["和東國小","軟"],["培英國小","軟"],["大同國小","軟"],["忠孝國小","軟硬"],["東山國小","軟硬"],["田中國小","軟硬"],["線西國小","軟硬"]],"南投縣":[["中正國小","軟硬"],["千秋國小","軟硬"],["南投國小","軟"],["埔里國小","軟硬"],["成城國小","軟"],["新街國小","軟硬"],["新豐國小","軟硬"],["法治國小","軟硬"]],"雲林縣":[["元長國小","軟硬"],["公誠國小","軟硬"],["南陽國小","軟硬"],["客厝國小","軟硬"],["平和國小","軟硬"],["文光國小","軟硬"],["文昌國小","軟硬"],["斗南國小","軟硬"],["東和國小","軟硬"],["林內國小","軟硬"],["鎮南國小","軟硬"],["鎮西國小","軟硬"],["雲林國小","硬"],["饒平國小","軟硬"],["馬光國小","軟硬"],["麥寮國小","軟硬"]],"嘉義縣":[["中埔國小","軟硬"],["同仁國小","軟硬"],["和興國小","軟硬"],["大同國小","軟硬"],["大崎國小","軟硬"],["太保國小","軟硬"],["朴子國小","軟硬"],["柳林國小","軟硬"],["福樂國小","軟硬"],["秀林國小","軟硬"]],"屏東縣":[["光華國小","軟硬"],["四林國小","軟"],["大平國小","軟硬"],["復興國小","軟硬"],["新南國小","軟硬"],["玉田國小","軟硬"],["載興國小","軟硬"],["高樹國小","軟硬"],["鶴聲國小","軟硬"]],"宜蘭縣":[["三星國小","軟硬"],["內城國中小","硬"],["南安國小","軟"],["大同國小","軟硬"],["寒溪國小","軟硬"],["清溝國小","軟硬"],["竹林國小","軟硬"],["蓬萊國小","軟硬"],["馬賽國小","軟硬"]],"花蓮縣":[["中原國小","軟硬"],["中正國小","軟硬"],["光復國小","軟硬"],["太巴塱國小","軟硬"],["富源國小","軟硬"],["新城國小","軟硬"],["水源國小","軟硬"],["玉里國小","軟硬"],["瑞穗國小","硬"]],"臺東縣":[["三民國小","軟"],["信義國小","軟"],["卑南國小","軟硬"],["南王國小","軟"],["大溪國小","軟"],["新生國小","軟硬"],["新興國小","軟"],["桃源國小","軟硬"],["武陵國小","軟"],["泰源國小","軟"],["紅葉國小","軟硬"],["豐田國小","軟硬"],["長濱國小","軟"]],"澎湖縣":[["石泉國小","軟硬"],["講美國小","軟硬"]],"金門縣":[["中正國小","軟硬"],["金寧國中小","硬"]]};
+const zhSort=new Intl.Collator('zh-Hant-TW').compare;
+Object.values(SCHOOLS).forEach(a=>a.sort((x,y)=>zhSort(x[0],y[0])));
+const schoolList=c=>SCHOOLS[c]||[];
+const inList=(c,n)=>schoolList(c).some(x=>x[0]===n);
+const STAFF_TITLES=['領隊','總教練','教練','教練'];
+const TITLE='2027第15屆立德盃少棒錦標賽';
+const PLAYER_COUNT=15, PAGE_W=794, PAGE_H=1123;
+
+const blankPlayer=()=>({name:'',birth:'',h:'',w:'',photo:''});
+const defaultState=()=>({
+  event:{title:'2027第15屆立德盃少棒錦標賽',county:'',school:''},
+  staff:STAFF_TITLES.map(t=>({title:t,name:'',no:'',photo:''})),
+  players:Array.from({length:PLAYER_COUNT},blankPlayer)
+});
+
+let state=loadDraft()||defaultState();
+let tab='team', openIdx=0;
+let schoolCustom=!!(state.event.school&&!inList(state.event.county,state.event.school));
+
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+/* ---------- persistence ---------- */
+function normalize(s){
+  const d=defaultState();
+  if(!s||!s.event||!Array.isArray(s.staff)||!Array.isArray(s.players))return null;
+  d.event=Object.assign(d.event,{title:(s.event.title&&s.event.title!=='2027立德盃第14屆少棒錦標賽')?s.event.title:d.event.title,county:s.event.county??d.event.county,school:s.event.school??''});
+  d.staff=d.staff.map((x,i)=>Object.assign(x,{name:(s.staff[i]&&s.staff[i].name)||'',no:(s.staff[i]&&s.staff[i].no)||'',photo:(s.staff[i]&&s.staff[i].photo)||''}));
+  d.players=d.players.map((x,i)=>Object.assign(x,s.players[i]?{name:s.players[i].name||'',birth:s.players[i].birth||'',h:s.players[i].h||'',w:s.players[i].w||'',photo:s.players[i].photo||''}:{}));
+  return d;
+}
+function loadDraft(){
+  try{const r=localStorage.getItem(KEY);if(r)return normalize(JSON.parse(r));}catch(e){}
+  return null;
+}
+let saveTimer;
+function persist(){
+  clearTimeout(saveTimer);
+  saveTimer=setTimeout(()=>{
+    try{localStorage.setItem(KEY,JSON.stringify(state));}
+    catch(e){toast('照片太多，瀏覽器無法自動暫存。請用「匯出草稿」保存進度。');}
+  },500);
+}
+
+/* ---------- helpers ---------- */
+function roc(iso){
+  if(!iso)return '';
+  const [y,m,d]=iso.split('-');
+  return (+y-1911)+'/'+m+'/'+d;
+}
+function issues(p){
+  const a=[];
+  if(!p.name)a.push('缺姓名');
+  if(!p.photo)a.push('缺照片');
+  if(!p.birth||!p.h||!p.w)a.push('缺生日／身高／體重');
+  return a;
+}
+function readImage(file,w,h){
+  return new Promise((res,rej)=>{
+    const fr=new FileReader();
+    fr.onerror=rej;
+    fr.onload=()=>{
+      const img=new Image();
+      img.onerror=rej;
+      img.onload=()=>{
+        const c=document.createElement('canvas');c.width=w;c.height=h;
+        const x=c.getContext('2d');
+        x.fillStyle='#fff';x.fillRect(0,0,w,h);
+        const r=Math.max(w/img.width,h/img.height),sw=w/r,sh=h/r;
+        x.drawImage(img,(img.width-sw)/2,(img.height-sh)*0.25,sw,sh,0,0,w,h);
+        res(c.toDataURL('image/jpeg',0.86));
+      };
+      img.src=fr.result;
+    };
+    fr.readAsDataURL(file);
+  });
+}
+let toastTimer;
+function toast(msg){
+  const t=$('#toast');t.textContent=msg;t.classList.add('show');
+  clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),3200);
+}
+
+/* ---------- sheet rendering ---------- */
+const PLACEHOLDER='<svg viewBox="0 0 50 57" xmlns="http://www.w3.org/2000/svg"><rect width="50" height="57" fill="#E6EAEE"/><circle cx="25" cy="22" r="9" fill="#B9C2CC"/><path d="M7 57c0-13 8-20 18-20s18 7 18 20z" fill="#B9C2CC"/></svg>';
+const phHtml=src=>src?`<img src="${src}" alt="">`:PLACEHOLDER;
+
+function cellHtml(p,i){
+  return `<div class="cell"><div class="ph">${phHtml(p.photo)}</div><div class="nm">${esc(p.name)}</div><div class="info">
+<div><b>背號(NO)</b><span>${i+1}</span></div>
+<div><b>年齡(AGE)</b><span>${roc(p.birth)}</span></div>
+<div><b>身高(cm)</b><span>${esc(p.h)}</span></div>
+<div><b>體重(KG)</b><span>${esc(p.w)}</span></div></div></div>`;
+}
+function staffCell(s){
+  return `<div class="cell"><div class="ph">${phHtml(s.photo)}</div><div class="stf">${s.title!=='領隊'&&s.no?`背號　${esc(s.no)}<br>`:''}${esc(s.title)}${s.name?'　'+esc(s.name):''}</div></div>`;
+}
+function sheetHtml(style,seal){
+  const e=state.event;
+  return `<div class="sheet" ${style?`style="${style}"`:''}>
+<div class="s-head"><div class="s-title">${TITLE}</div></div><div class="s-stitch"></div>
+<div class="s-team">${esc(e.county)}${e.county&&e.school?'　':''}${esc(e.school)}</div>
+<div class="s-grid staff">${state.staff.map(staffCell).join('')}</div>
+<div class="s-grid">${state.players.map(cellHtml).join('')}</div>
+${seal?`<div class="s-seal">${['總教練','體育組長','主任','校長'].map(t=>`<div><b>${t}</b><span></span></div>`).join('')}</div>`:''}</div>`;
+}
+function renderPreview(){
+  const box=$('#preview');
+  const s=Math.min(1,Math.max(280,box.clientWidth-40)/PAGE_W);
+  box.innerHTML=`<div class="pv-note">預覽依 A4 直式排版，一頁包含 4 位隊職員與 15 位球員。</div>
+<figure class="pw"><div class="pw-box" style="width:${PAGE_W*s}px;height:${PAGE_H*s}px">${sheetHtml(`transform:scale(${s})`)}</div>
+<figcaption><span>A4 直式</span></figcaption></figure>`;
+}
+
+/* ---------- editor rendering ---------- */
+function fld(label,inner){return `<label class="fld"><span>${label}</span>${inner}</label>`;}
+function photoPick(kind,src){
+  return `<div class="photo-pick"><div class="thumb">${src?`<img src="${src}" alt="">`:'無照片'}</div>
+<span class="btn sm filebtn">選擇照片<input type="file" accept="image/*" data-file="${kind}"></span>
+${src?`<button class="btn sm" data-act="clear-photo">移除</button>`:''}</div>`;
+}
+function playerHead(p,i){
+  const iss=issues(p);
+  return `<div class="thumb">${p.photo?`<img src="${p.photo}" alt="">`:(i+1)}</div>
+<div class="t"><b>${i+1} 號　${esc(p.name)||'未填姓名'}</b><br>
+${iss.length?iss.map(x=>`<span class="badge">${x}</span>`).join(''):'<span class="badge ok">資料完整</span>'}</div>`;
+}
+function playerBody(p){
+  return `<div class="pl-body">
+${photoPick('photo-p',p.photo)}
+${fld('姓名',`<input data-f="name" value="${esc(p.name)}" autocomplete="off">`)}
+${fld('出生日期（西元選取，輸出為民國年）',`<input type="date" data-f="birth" value="${esc(p.birth)}">`)}
+<div class="row2">${fld('身高 (cm)',`<input data-f="h" value="${esc(p.h)}" inputmode="numeric" maxlength="3">`)}${fld('體重 (KG)',`<input data-f="w" value="${esc(p.w)}" inputmode="numeric" maxlength="3">`)}</div></div>`;
+}
+function renderEditor(){
+  const ed=$('#editor');
+  let h=`<div class="tabs" role="tablist">
+<button class="tab" role="tab" data-tab="team" aria-selected="${tab==='team'}">參賽隊伍與職員</button>
+<button class="tab" role="tab" data-tab="players" aria-selected="${tab==='players'}">球員（${PLAYER_COUNT}）</button></div><div class="panel">`;
+  if(tab==='team'){
+    const e=state.event;
+    h+=`<h2>參賽隊伍</h2>
+<div class="row2">${fld('縣市',`<select data-e="county"><option value="">請選擇縣市</option>${COUNTIES.map(c=>`<option ${c===e.county?'selected':''}>${c}</option>`).join('')}</select>`)}
+${fld('學校名稱',`<select data-school-sel ${e.county?'':'disabled'}><option value="">${e.county?'請選擇學校':'請先選擇縣市'}</option>${schoolList(e.county).map(([n,t])=>`<option value="${esc(n)}" ${!schoolCustom&&n===e.school?'selected':''}>${esc(n)}</option>`).join('')}${e.county?`<option value="__other__" ${schoolCustom?'selected':''}>其他（自行輸入）</option>`:''}</select>`)}</div>
+${schoolCustom?fld('自行輸入學校名稱',`<input data-e="school" value="${esc(e.school)}" placeholder="例如：○○國小" autocomplete="off">`):''}
+<p class="hint">學校選單為 114 學年度學生棒球聯賽國小軟式組、硬式組報名學校；名單中沒有的學校請選「其他」自行輸入。</p>
+<h2>隊職員</h2>`;
+    state.staff.forEach((s,i)=>{
+      h+=`<article class="pl open" data-s="${i}"><div class="pl-body" style="border-top:0">
+<div class="staff-title">${s.title}${STAFF_TITLES.filter(t=>t===s.title).length>1?'（'+(i-STAFF_TITLES.indexOf(s.title)+1)+'）':''}</div>
+${photoPick('photo-s',s.photo)}
+${s.title==='領隊'?fld('姓名',`<input data-sf="name" value="${esc(s.name)}" autocomplete="off">`):`<div class="row2">${fld('姓名',`<input data-sf="name" value="${esc(s.name)}" autocomplete="off">`)}${fld('背號',`<input data-sf="no" value="${esc(s.no)}" inputmode="numeric" maxlength="3" autocomplete="off">`)}</div>`}</div></article>`;
+    });
+  }else{
+    const bad=state.players.filter(p=>issues(p).length).length;
+    h+=`<div class="summary">背號固定為 1 至 15 號。${bad?`<span class="badge">${bad} 位待補資料</span>`:'<span class="badge ok">資料完整</span>'}</div>`;
+    state.players.forEach((p,i)=>{
+      const open=i===openIdx;
+      h+=`<article class="pl ${open?'open':''}" data-p="${i}"><button class="pl-head" data-act="toggle" aria-expanded="${open}">${playerHead(p,i)}</button>${open?playerBody(p):''}</article>`;
+    });
+  }
+  h+='</div>';
+  ed.innerHTML=h;
+}
+function rerender(){renderEditor();renderPreview();persist();}
+
+/* ---------- editor events ---------- */
+const ed=$('#editor');
+ed.addEventListener('input',e=>{
+  const t=e.target;
+  const pa=t.closest('[data-p]'), sa=t.closest('[data-s]');
+  if(t.dataset.e){state.event[t.dataset.e]=t.value;}
+  else if(t.dataset.f&&pa){
+    const i=+pa.dataset.p;state.players[i][t.dataset.f]=t.value;
+    pa.querySelector('.pl-head').innerHTML=playerHead(state.players[i],i);
+  }else if(t.dataset.sf&&sa){state.staff[+sa.dataset.s][t.dataset.sf]=t.value;}
+  else return;
+  renderPreview();persist();
+});
+ed.addEventListener('change',e=>{
+  const t=e.target;
+  if(t.tagName==='SELECT'&&t.dataset.e==='county'){
+    state.event.county=t.value;
+    if(!schoolCustom&&!inList(t.value,state.event.school))state.event.school='';
+    renderEditor();renderPreview();persist();return;
+  }
+  if(t.hasAttribute('data-school-sel')){
+    if(t.value==='__other__'){
+      schoolCustom=true;state.event.school='';renderEditor();renderPreview();persist();
+      const inp=ed.querySelector('input[data-e="school"]');if(inp)inp.focus();
+    }else{schoolCustom=false;state.event.school=t.value;renderEditor();renderPreview();persist();}
+    return;
+  }
+  if(t.dataset.file&&t.files&&t.files[0]){
+    const kind=t.dataset.file;
+    const pa=t.closest('[data-p]'),sa=t.closest('[data-s]');
+    readImage(t.files[0],336,384).then(url=>{
+      if(kind==='photo-p'&&pa)state.players[+pa.dataset.p].photo=url;
+      else if(kind==='photo-s'&&sa)state.staff[+sa.dataset.s].photo=url;
+      rerender();
+    }).catch(()=>toast('無法讀取這張圖片，請換一張 JPG 或 PNG。'));
+  }
+});
+const armed=new WeakMap();
+function confirmTwice(btn,label){
+  if(armed.get(btn)){armed.delete(btn);return true;}
+  armed.set(btn,true);const old=btn.textContent;btn.textContent=label;btn.classList.add('armed');
+  setTimeout(()=>{armed.delete(btn);btn.textContent=old;btn.classList.remove('armed');},3000);
+  return false;
+}
+ed.addEventListener('click',e=>{
+  const tabBtn=e.target.closest('[data-tab]');
+  if(tabBtn){tab=tabBtn.dataset.tab;renderEditor();return;}
+  const b=e.target.closest('[data-act]');if(!b)return;
+  const pa=b.closest('[data-p]'),sa=b.closest('[data-s]');
+  const i=pa?+pa.dataset.p:sa?+sa.dataset.s:-1;
+  if(b.dataset.act==='toggle'){openIdx=(openIdx===i?-1:i);renderEditor();}
+  else if(b.dataset.act==='clear-photo'){
+    if(pa)state.players[i].photo='';else if(sa)state.staff[i].photo='';rerender();
+  }
+});
+
+/* ---------- top actions ---------- */
+async function saveFile(filename,data){
+  let d=null;
+  try{d=window.claude&&window.claude.use?await window.claude.use('downloads'):null;}catch(e){}
+  if(d){
+    try{await d.save({filename,data});toast('已儲存 '+filename);}
+    catch(err){if(err&&err.code!=='declined')toast('下載失敗：'+(err.message||err.code));}
+    return;
+  }
+  try{
+    const url=URL.createObjectURL(data);
+    const a=document.createElement('a');a.href=url;a.download=filename;
+    document.body.appendChild(a);a.click();a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),10000);
+    toast('已下載 '+filename);
+  }catch(err){toast('下載失敗：'+(err.message||err));}
+}
+async function capture(seal){
+  if(typeof html2canvas==='undefined')throw new Error('匯出元件尚未載入，請稍後再試。');
+  if(document.fonts&&document.fonts.ready)await document.fonts.ready;
+  const host=document.createElement('div');
+  host.style.cssText='position:fixed;left:-10000px;top:0;width:'+PAGE_W+'px;';
+  host.innerHTML=seal?sheetHtml('--cw:120px',true):sheetHtml('');
+  document.body.appendChild(host);
+  try{return await html2canvas(host.firstElementChild,{scale:2,backgroundColor:'#ffffff',logging:false});}
+  finally{host.remove();}
+}
+const fname=ext=>TITLE+'_'+(state.event.school||'學校')+ext;
+
+async function makePdf(btnSel,seal){
+  const btn=$(btnSel);btn.disabled=true;const old=btn.textContent;btn.textContent='產生中…';
+  try{
+    const {jsPDF}=window.jspdf;
+    const pdf=new jsPDF({unit:'mm',format:'a4',orientation:'portrait'});
+    const c=await capture(seal);
+    pdf.addImage(c.toDataURL('image/jpeg',0.92),'JPEG',0,0,210,297);
+    await saveFile(fname(seal?'_核章.pdf':'.pdf'),pdf.output('blob'));
+  }catch(err){toast(err.message||'PDF 產生失敗');}
+  finally{btn.disabled=false;btn.textContent=old;}
+}
+$('#btnPdf').addEventListener('click',()=>makePdf('#btnPdf',false));
+$('#btnSeal').addEventListener('click',()=>makePdf('#btnSeal',true));
+/* ---------- init ---------- */
+let rt;
+new ResizeObserver(()=>{clearTimeout(rt);rt=setTimeout(renderPreview,80);}).observe($('#preview'));
+renderEditor();renderPreview();
+})();
+</script>
+</body>
+</html>
