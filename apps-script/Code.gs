@@ -6,6 +6,13 @@
 const FOLDER_ID = '請貼上雲端硬碟資料夾ID';
 const MAX_BYTES = 15 * 1024 * 1024;
 
+/** 開啟網頁應用程式網址時，直接顯示報名表（需在專案中新增名為 Index 的 HTML 檔，貼上 index.html 內容） */
+function doGet() {
+  return HtmlService.createHtmlOutputFromFile('Index')
+    .setTitle('2027第15屆立德盃少棒錦標賽')
+    .addMetaTag('viewport', 'width=device-width, initial-scale=1');
+}
+
 function doPost(e) {
   try {
     const body = JSON.parse(e.postData.contents);
