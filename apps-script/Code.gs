@@ -3,7 +3,7 @@
  * 檔名為「縣市_校名_報名表.pdf」；同校再次更新報名時，舊檔移至垃圾桶並以新檔取代。
  * 聯絡人姓名、行動電話、Email 與上傳時間寫在檔案的「說明」欄位。
  */
-const FOLDER_ID = '請貼上雲端硬碟資料夾ID';
+const FOLDER_ID = '1RtRVzzf1e4vwZz83s_RAuaPjquLzJkjK';
 const MAX_BYTES = 15 * 1024 * 1024;
 
 /** 開啟網頁應用程式網址時，直接顯示報名表（需在專案中新增名為 Index 的 HTML 檔，貼上 index.html 內容） */
@@ -15,14 +15,22 @@ function doGet() {
 
 function doPost(e) {
   try {
-    const body = JSON.parse(e.postData.contents);
+    return out(savePdf(JSON.parse(e.postData.contents)));
+  } catch (err) {
+    return out({ ok: false, error: String(err && err.message || err) });
+  }
+}
+
+/** 報名表在 Apps Script 網頁中以 google.script.run 呼叫；doPost 也共用此函式 */
+function savePdf(body) {
+  try {
     const county = clean(body.county);
     const school = clean(body.school);
-    if (!county || !school) return out({ ok: false, error: '缺少縣市或校名' });
+    if (!county || !school) return { ok: false, error: '缺少縣市或校名' };
 
     const bytes = Utilities.base64Decode(String(body.pdf || ''));
-    if (!bytes.length || bytes.length > MAX_BYTES) return out({ ok: false, error: '檔案大小不符' });
-    if (String.fromCharCode(bytes[0], bytes[1], bytes[2], bytes[3]) !== '%PDF') return out({ ok: false, error: '檔案不是 PDF' });
+    if (!bytes.length || bytes.length > MAX_BYTES) return { ok: false, error: '檔案大小不符' };
+    if (String.fromCharCode(bytes[0], bytes[1], bytes[2], bytes[3]) !== '%PDF') return { ok: false, error: '檔案不是 PDF' };
 
     const name = county + '_' + school + '_報名表.pdf';
     const c = body.contact || {};
@@ -40,9 +48,9 @@ function doPost(e) {
     } finally {
       lock.releaseLock();
     }
-    return out({ ok: true, name: name });
+    return { ok: true, name: name };
   } catch (err) {
-    return out({ ok: false, error: String(err && err.message || err) });
+    return { ok: false, error: String(err && err.message || err) };
   }
 }
 
