@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <base target="_top">
+  <meta charset="utf-8">
+  <style>
+    :root {
+      --brand: #ea580c;
+      --brand-dark: #c2410c;
+      --brand-soft: #fff7ed;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --line: #e5e7eb;
+      --ok: #15803d;
+      --warn: #b45309;
+      --err: #b91c1c;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: #f3f4f6;
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang TC", "Microsoft JhengHei", "Noto Sans TC", sans-serif;
+      font-size: 16px;
+    }
+    header {
+      background: var(--brand);
+      color: #fff;
+      padding: 14px 16px;
+      font-size: 20px;
+      font-weight: 700;
+    }
+    main { max-width: 560px; margin: 0 auto; padding: 16px 16px 110px; }
+    .card {
+      background: #fff;
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 14px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, .06);
+    }
+    .card h2 { margin: 0 0 12px; font-size: 15px; color: var(--muted); font-weight: 600; }
+    label { display: block; font-weight: 600; margin: 12px 0 6px; }
+    label:first-of-type { margin-top: 0; }
+    input, textarea {
+      width: 100%;
+      font: inherit;
+      padding: 12px;
+      border: 1.5px solid var(--line);
+      border-radius: 10px;
+      background: #fff;
+    }
+    input:focus, textarea:focus { outline: none; border-color: var(--brand); }
+    textarea { resize: vertical; }
+
+    /* 電話查詢 */
+    .phone-wrap { position: relative; }
+    #phone { font-size: 22px; letter-spacing: 1px; }
+    .badge { display: inline-block; margin-top: 6px; font-size: 14px; min-height: 20px; }
+    .badge.old { color: var(--ok); }
+    .badge.new { color: var(--warn); }
+    #suggest {
+      position: absolute; left: 0; right: 0; top: 100%; z-index: 10;
+      background: #fff; border: 1.5px solid var(--line); border-radius: 10px;
+      margin-top: 4px; padding: 4px 0; list-style: none;
+      box-shadow: 0 6px 16px rgba(0, 0, 0, .12);
+    }
+    #suggest li { padding: 10px 12px; cursor: pointer; }
+    #suggest li:hover { background: var(--brand-soft); }
+    #suggest .s-phone { font-weight: 700; }
+    #suggest .s-sub { font-size: 13px; color: var(--muted); }
+
+    /* 品項數量 */
+    .item {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 8px 0; border-bottom: 1px solid var(--line);
+    }
+    .item:last-child { border-bottom: none; }
+    .item-name { font-size: 18px; font-weight: 600; }
+    .stepper { display: flex; align-items: center; gap: 8px; }
+    .stepper button {
+      width: 44px; height: 44px; border-radius: 50%;
+      border: 1.5px solid var(--brand); background: #fff; color: var(--brand);
+      font-size: 24px; line-height: 1; cursor: pointer;
+    }
+    .stepper input { width: 56px; text-align: center; font-size: 20px; padding: 8px 4px; }
+    .item.active .item-name { color: var(--brand); }
+
+    /* 時間快捷 & 工人 */
+    .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+    .chip {
+      border: 1.5px solid var(--line); background: #fff; border-radius: 999px;
+      padding: 8px 14px; font: inherit; font-size: 15px; cursor: pointer;
+    }
+    .chip.on { background: var(--brand); border-color: var(--brand); color: #fff; }
+    .workers { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 8px; }
+    .workers label { margin: 0; }
+    .workers input { display: none; }
+    .workers span {
+      display: block; text-align: center; padding: 14px 8px;
+      border: 1.5px solid var(--line); border-radius: 10px; font-weight: 600; cursor: pointer;
+    }
+    .workers input:checked + span { background: var(--brand); border-color: var(--brand); color: #fff; }
+    .hint { color: var(--muted); font-size: 14px; }
+
+    /* 送出 */
+    .submit-bar {
+      position: fixed; left: 0; right: 0; bottom: 0;
+      background: #fff; border-top: 1px solid var(--line); padding: 12px 16px;
+    }
+    #submitBtn {
+      display: block; width: 100%; max-width: 528px; margin: 0 auto;
+      padding: 16px; border: none; border-radius: 12px;
+      background: var(--brand); color: #fff; font: inherit; font-size: 19px; font-weight: 700; cursor: pointer;
+    }
+    #submitBtn:active { background: var(--brand-dark); }
+    #submitBtn:disabled { background: #9ca3af; }
+
+    #toast {
+      position: fixed; left: 16px; right: 16px; top: 16px; z-index: 50;
+      max-width: 528px; margin: 0 auto; padding: 14px 16px; border-radius: 12px;
+      color: #fff; font-weight: 600; box-shadow: 0 8px 24px rgba(0, 0, 0, .2);
+      white-space: pre-line;
+    }
+    #toast.ok { background: var(--ok); }
+    #toast.warn { background: var(--warn); }
+    #toast.err { background: var(--err); }
+    [hidden] { display: none !important; }
+  </style>
+</head>
+<body>
+  <header>🔥 瓦斯行快速接單</header>
+  <div id="toast" hidden></div>
+
+  <main>
+    <form id="orderForm" autocomplete="off">
+      <section class="card">
+        <h2>客戶資料</h2>
+        <label for="phone">客戶電話</label>
+        <div class="phone-wrap">
+          <input id="phone" type="tel" inputmode="numeric" placeholder="輸入電話，老客戶會自動帶出" required>
+          <ul id="suggest" hidden></ul>
+        </div>
+        <div id="phoneBadge" class="badge"></div>
+
+        <label for="name">客戶姓名</label>
+        <input id="name" placeholder="例：王先生" required>
+
+        <label for="address">送貨地址</label>
+        <textarea id="address" rows="2" placeholder="例：台中市西區民生路 100 號 3 樓" required></textarea>
+      </section>
+
+      <section class="card">
+        <h2>瓦斯品項與數量</h2>
+        <div id="items"><div class="hint">載入中…</div></div>
+      </section>
+
+      <section class="card">
+        <h2>指定時間</h2>
+        <div class="chips" id="timeChips">
+          <button type="button" class="chip on" data-time="asap">盡快送達</button>
+          <button type="button" class="chip" data-time="1h">1 小時內</button>
+          <button type="button" class="chip" data-time="2h">2 小時內</button>
+          <button type="button" class="chip" data-time="tomorrow9">明天早上 9 點</button>
+        </div>
+        <input id="schedule" type="datetime-local">
+      </section>
+
+      <section class="card">
+        <h2>指派工人</h2>
+        <div id="workers" class="workers"><div class="hint">載入中…</div></div>
+      </section>
+
+      <section class="card">
+        <h2>備註</h2>
+        <textarea id="note" rows="2" placeholder="例：放後門、要收空桶、先打電話"></textarea>
+      </section>
+    </form>
+  </main>
+
+  <div class="submit-bar">
+    <button id="submitBtn" type="submit" form="orderForm">送出並派工</button>
+  </div>
+
+  <script>
+    const $ = id => document.getElementById(id);
+    let ITEMS = [];
+    let lookupTimer = null;
+    let autoFilled = false; // 姓名/地址是否為系統自動帶入（自動帶入的才可以被下一次查詢覆蓋）
+    let toastTimer = null;
+
+    /* ---------- 初始化 ---------- */
+    google.script.run
+      .withSuccessHandler(renderInit)
+      .withFailureHandler(err => showToast('err', '載入失敗：' + err.message))
+      .getInitData();
+
+    function renderInit(data) {
+      ITEMS = data.items;
+      const itemsBox = $('items');
+      itemsBox.innerHTML = '';
+      ITEMS.forEach((name, i) => {
+        const row = document.createElement('div');
+        row.className = 'item';
+        row.innerHTML =
+          '<span class="item-name"></span>' +
+          '<div class="stepper">' +
+          '<button type="button" data-step="-1" aria-label="減少">−</button>' +
+          '<input type="number" min="0" max="99" value="0" inputmode="numeric">' +
+          '<button type="button" data-step="1" aria-label="增加">+</button>' +
+          '</div>';
+        row.querySelector('.item-name').textContent = name;
+        row.querySelector('input').id = 'qty' + i;
+        itemsBox.appendChild(row);
+      });
+
+      const workersBox = $('workers');
+      workersBox.innerHTML = '';
+      if (!data.workers.length) {
+        workersBox.innerHTML = '<div class="hint">尚未設定工人，請到試算表 Workers 工作表新增。</div>';
+      }
+      data.workers.forEach(name => {
+        const label = document.createElement('label');
+        label.innerHTML = '<input type="radio" name="worker"><span></span>';
+        label.querySelector('input').value = name;
+        label.querySelector('span').textContent = name;
+        workersBox.appendChild(label);
+      });
+    }
+
+    /* ---------- 數量加減 ---------- */
+    $('items').addEventListener('click', e => {
+      const btn = e.target.closest('button[data-step]');
+      if (!btn) return;
+      const input = btn.parentElement.querySelector('input');
+      input.value = Math.max(0, Math.min(99, (parseInt(input.value, 10) || 0) + Number(btn.dataset.step)));
+      markActiveItems();
+    });
+    $('items').addEventListener('input', markActiveItems);
+
+    function markActiveItems() {
+      document.querySelectorAll('.item').forEach(row => {
+        row.classList.toggle('active', (parseInt(row.querySelector('input').value, 10) || 0) > 0);
+      });
+    }
+
+    /* ---------- 電話查詢客戶 ---------- */
+    $('phone').addEventListener('input', () => {
+      clearTimeout(lookupTimer);
+      const digits = $('phone').value.replace(/\D/g, '');
+      if (digits.length < 3) {
+        hideSuggest();
+        setBadge('', '');
+        return;
+      }
+      lookupTimer = setTimeout(() => lookup(digits), 350);
+    });
+
+    function lookup(digits) {
+      google.script.run
+        .withSuccessHandler(res => {
+          // 查詢回來前使用者可能又改了電話，只處理最新的結果
+          if ($('phone').value.replace(/\D/g, '') !== digits) return;
+          if (res.exact) {
+            fillCustomer(res.exact);
+            hideSuggest();
+            return;
+          }
+          if (autoFilled) clearCustomer();
+          setBadge(digits.length >= 8 ? 'new' : '', digits.length >= 8 ? '🆕 新客戶，送出後會自動建檔' : '');
+          showSuggest(res.matches);
+        })
+        .withFailureHandler(err => setBadge('new', '查詢失敗：' + err.message))
+        .searchCustomers(digits);
+    }
+
+    function fillCustomer(c) {
+      $('phone').value = c.phone;
+      if (autoFilled || !$('name').value.trim()) $('name').value = c.name;
+      if (autoFilled || !$('address').value.trim()) $('address').value = c.address;
+      autoFilled = true;
+      setBadge('old', '✅ 老客戶，已自動帶入資料');
+    }
+
+    function clearCustomer() {
+      $('name').value = '';
+      $('address').value = '';
+      autoFilled = false;
+    }
+
+    function showSuggest(list) {
+      const ul = $('suggest');
+      ul.innerHTML = '';
+      if (!list.length) return hideSuggest();
+      list.forEach(c => {
+        const li = document.createElement('li');
+        li.innerHTML = '<div class="s-phone"></div><div class="s-sub"></div>';
+        li.querySelector('.s-phone').textContent = c.phone + '　' + c.name;
+        li.querySelector('.s-sub').textContent = c.address;
+        // 用 mousedown 搶在輸入框 blur 之前觸發
+        li.addEventListener('mousedown', e => {
+          e.preventDefault();
+          fillCustomer(c);
+          hideSuggest();
+        });
+        ul.appendChild(li);
+      });
+      ul.hidden = false;
+    }
+
+    function hideSuggest() { $('suggest').hidden = true; }
+    $('phone').addEventListener('blur', hideSuggest);
+
+    // 手動修改姓名或地址後，就不再被自動帶入覆蓋
+    ['name', 'address'].forEach(id => $(id).addEventListener('input', () => { autoFilled = false; }));
+
+    function setBadge(type, text) {
+      $('phoneBadge').className = 'badge ' + type;
+      $('phoneBadge').textContent = text;
+    }
+
+    /* ---------- 指定時間快捷 ---------- */
+    $('timeChips').addEventListener('click', e => {
+      const chip = e.target.closest('.chip');
+      if (!chip) return;
+      const now = new Date();
+      let d = null;
+      if (chip.dataset.time === '1h') d = new Date(now.getTime() + 60 * 60 * 1000);
+      if (chip.dataset.time === '2h') d = new Date(now.getTime() + 2 * 60 * 60 * 1000);
+      if (chip.dataset.time === 'tomorrow9') {
+        d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 9, 0);
+      }
+      $('schedule').value = d ? toLocalInput(d) : '';
+      setChip(chip);
+    });
+
+    $('schedule').addEventListener('input', () => {
+      setChip($('schedule').value ? null : document.querySelector('[data-time="asap"]'));
+    });
+
+    function setChip(chip) {
+      document.querySelectorAll('#timeChips .chip').forEach(c => c.classList.toggle('on', c === chip));
+    }
+
+    function toLocalInput(d) {
+      const p = n => String(n).padStart(2, '0');
+      return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + 'T' + p(d.getHours()) + ':' + p(d.getMinutes());
+    }
+
+    /* ---------- 送出 ---------- */
+    $('orderForm').addEventListener('submit', e => {
+      e.preventDefault();
+      const items = ITEMS.map((name, i) => ({ name: name, qty: parseInt($('qty' + i).value, 10) || 0 }))
+        .filter(it => it.qty > 0);
+      const worker = document.querySelector('input[name="worker"]:checked');
+
+      if (!items.length) return showToast('err', '請至少選擇一項瓦斯品項');
+      if (!worker) return showToast('err', '請選擇要指派的工人');
+
+      const payload = {
+        phone: $('phone').value,
+        name: $('name').value,
+        address: $('address').value,
+        items: items,
+        schedule: $('schedule').value,
+        worker: worker.value,
+        note: $('note').value,
+      };
+
+      const btn = $('submitBtn');
+      btn.disabled = true;
+      btn.textContent = '送出中…';
+
+      const restore = () => { btn.disabled = false; btn.textContent = '送出並派工'; };
+
+      google.script.run
+        .withSuccessHandler(res => {
+          restore();
+          if (res.notified) {
+            showToast('ok', '✅ 訂單 ' + res.orderId + ' 已建立\n已用 LINE 通知「' + res.worker + '」');
+          } else {
+            showToast('warn', '⚠️ 訂單 ' + res.orderId + ' 已建立，但 LINE 通知失敗：\n' + res.error +
+              '\n請打電話通知工人，或稍後在試算表選單重送。', 12000);
+          }
+          resetForm();
+        })
+        .withFailureHandler(err => {
+          restore();
+          showToast('err', '❌ 送出失敗：' + err.message);
+        })
+        .submitOrder(payload);
+    });
+
+    function resetForm() {
+      $('orderForm').reset();
+      setBadge('', '');
+      setChip(document.querySelector('[data-time="asap"]'));
+      markActiveItems();
+      autoFilled = false;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function showToast(type, text, ms) {
+      const t = $('toast');
+      t.className = type;
+      t.textContent = text;
+      t.hidden = false;
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => { t.hidden = true; }, ms || 6000);
+    }
+    $('toast').addEventListener('click', () => { $('toast').hidden = true; });
+  </script>
+</body>
+</html>
